@@ -11,8 +11,8 @@ public class P08TheHeiganDance {
         double heiganPoints = 3000000;
         boolean isHeiganBeated = false;
         boolean isPlayerKilled = false;
-        int previousTargetRow = -2;
-        int previousTargetCol = -2;
+        boolean activeCloud = false;
+        String spellType = "";
         int playerRow = 7;
         int playerCol = 7;
         int[][] matrix = {
@@ -38,18 +38,24 @@ public class P08TheHeiganDance {
         while (playerPoints > 0 && heiganPoints > 0) {
 
             heiganPoints -= damage;
-            if (heiganPoints <= 0) {
-                isHeiganBeated = true;
-                if (isHit(matrix, playerRow, playerCol, previousTargetRow, previousTargetCol)) { //is player hit by previous cloud?
-                    playerPoints -= 3500;
-                    previousTargetRow = -2;
-                    previousTargetCol = -2;
+
+            if (activeCloud) { //is player hit by previous cloud?
+                playerPoints -= 3500;
+                activeCloud = false;
+
+                if (playerPoints < 0) {
+                    isPlayerKilled = true;
+                    break;
                 }
+            }
+
+            if (heiganPoints < 0) {
+                isHeiganBeated = true;
                 break;
             }
 
             spellDetails = scanner.nextLine().split("\\s+");
-            String spellType = spellDetails[0];
+            spellType = spellDetails[0];
             int targetRow = Integer.parseInt(spellDetails[1]);
             int targetCol = Integer.parseInt(spellDetails[2]);
 
@@ -62,27 +68,18 @@ public class P08TheHeiganDance {
                     playerRow++;
                 } else if (playerCol - 1 < targetCol - 1 && playerCol - 1 >= 0) {
                     playerCol--;
-                } else {
-                    if (isHit(matrix, playerRow, playerCol, previousTargetRow, previousTargetCol)) { //is player hit by previous cloud?
+                }
+
+                if (isHit(matrix, playerRow, playerCol, targetRow, targetCol)) {
+                    if (spellType.contains("Cloud")) { //Hit by Plague Cloud
                         playerPoints -= 3500;
-                        previousTargetRow = -2;
-                        previousTargetCol = -2;
-                    }
-                    if (playerPoints <= 0) {
-                        spellDetails[0] = "Plague Cloud";
-                        break;
-                    } else {
-                        if (spellType.contains("Cloud")) {
-                            playerPoints -= 3500;
-                        } else {
-                            playerPoints -= 6000;
-                        }
+                        spellType = "Plague Cloud";
+                        activeCloud = true;
+                    } else { // Hit by Eruption
+                        playerPoints -= 6000;
                     }
                 }
-            }
-            if (spellType.equals("Cloud")) {
-                previousTargetRow = targetRow;
-                previousTargetCol = targetCol;
+
             }
         }
 
@@ -93,7 +90,6 @@ public class P08TheHeiganDance {
         }
 
         if (playerPoints <= 0) {
-            String spellType = spellDetails[0];
             System.out.printf("Player: Killed by %s%n", spellType);
         } else {
             System.out.printf("Player: %d%n", playerPoints);
